@@ -24,7 +24,7 @@ logic [DWIDTH-1:0] mem [2**AWIDTH];
 
     // Drive registers load signal
     logic [2**AWIDTH-1:0] load;
-    assign load = waddr_1hot & {(2**AWIDTH-1){wen}};
+    assign load = waddr_1hot & {(2**AWIDTH){wen}};
 
     // Define write operation
     always_ff @(posedge clk or negedge rst_n) begin

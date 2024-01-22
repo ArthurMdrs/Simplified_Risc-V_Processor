@@ -1,20 +1,43 @@
-module alu (
-	input [7:0] SrcA, SrcB,
-	input [2:0] ULAControl,
-	output reg [7:0] ULAResult, 
-	output Z
+module alu #(
+    int SWIDTH = 3,
+    int DWIDTH = 8
+) (
+	output logic [DWIDTH-1:0] res, 
+	output logic              res_is_0,
+	input  logic [DWIDTH-1:0] src1,
+	input  logic [DWIDTH-1:0] src2,
+	input  logic [SWIDTH-1:0] sel
 );
-	always @ (*)
-		case (ULAControl)
-			0: ULAResult = SrcA & SrcB;
-			1: ULAResult = SrcA | SrcB;
-			2: ULAResult = SrcA + SrcB;
-			6: ULAResult = SrcA + ~SrcB + 1;
-			//7: ULAResult = (SrcA < SrcB) ? 1 : 0;
-			7: ULAResult = SrcA < SrcB;
-			default: ULAResult = 0;
-		endcase
-	
-	//assign Z = (ULAResult == 0) ? 1 : 0;
-	assign Z = ULAResult == 0;
+
+typedef bit [SWIDTH-1:0] sel_t;
+localparam sel_t AND = 0, OR  = 1, ADD = 2, SUB = 6, SLT = 7;
+
+always_comb
+    case (sel)
+        AND: res = src1 & src2;
+        OR : res = src1 | src2;
+        ADD: res = src1 + src2;
+        SUB: res = src1 + ~src2 + 1;
+        SLT: res = (src1 < src2);
+        default: res = 0;
+    endcase
+
+assign res_is_0 = (res == 0);
+
+
+    
+`ifdef SVA_ON
+
+bind alu alu_vc #(
+    .SWIDTH(SWIDTH),
+    .DWIDTH(DWIDTH)
+) alu_vc_inst (
+	.res, 
+	.res_is_0,
+	.src1,
+	.src2,
+	.sel
+);
+
+`endif
 endmodule

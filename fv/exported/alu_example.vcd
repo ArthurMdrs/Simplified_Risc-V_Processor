@@ -1,0 +1,79 @@
+$date Mon Jan 22 14:00:49 2024
+ $end
+$version JasperGold $end
+$timescale 1 ns $end
+$scope module alu $end
+$scope module alu_vc_inst $end
+$var wire 8 ! res [7:0] $end
+$var wire 3 " sel [2:0] $end
+$var wire 1 # :func_SIGNAL_CAN_BE_VALUE_7:SIGNAL_CAN_BE_VALUE $end
+$var wire 1 $ :func_VALID_SEL_0:VALID_SEL $end
+$var wire 1 % genblk1[7].COV_RES_CAN_BE_VAL $end
+$upscope $end
+$var wire 1 & :jasper_formal_reset $end
+$var wire 8 ' res [7:0] $end
+$var wire 1 ( res_is_0 $end
+$var wire 8 ) src1 [7:0] $end
+$var wire 8 * src2 [7:0] $end
+$var wire 3 + sel [2:0] $end
+$var wire 1 , :jasper_formal_clock $end
+$upscope $end
+$enddefinitions $end
+#0
+b11000000 !
+b000 "
+0#
+1$
+0%
+0&
+b11000000 '
+0(
+b11000001 )
+b11100000 *
+b000 +
+1,
+#5
+0,
+#10
+b11100001 !
+b001 "
+b11100001 '
+b11100001 *
+b001 +
+1,
+#15
+0,
+#20
+b10100010 !
+b010 "
+b10100010 '
+b010 +
+1,
+#25
+0,
+#30
+b01111111 !
+b001 "
+1#
+1%
+b01111111 '
+b01010101 )
+b01101010 *
+b001 +
+1,
+#35
+0,
+#40
+b00000000 !
+b110 "
+0#
+0%
+b00000000 '
+1(
+b00111110 )
+b00111110 *
+b110 +
+1,
+#45
+0,
+#50

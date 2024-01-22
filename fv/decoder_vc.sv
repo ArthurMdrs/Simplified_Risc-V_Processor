@@ -7,6 +7,8 @@ module decoder_vc #(
 
 `ifdef SVA_ON
 
+`ifndef SIM
+
 // Properties
 property SIG_IS_ONE_HOT (signal);
     $onehot(signal);
@@ -21,6 +23,8 @@ generate
         COV_OBSERVE_IN: cover property (in == i);
     end
 endgenerate
+
+`endif
 
 `endif
     

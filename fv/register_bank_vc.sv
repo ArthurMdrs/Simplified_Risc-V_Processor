@@ -30,6 +30,8 @@ always_ff @(posedge clk or negedge rst_n) begin
         write_happened <= 1;
 end
 
+
+
 // Properties
 property SIGNAL_CAN_BE_VALUE (signal, value);
     (signal == value);
@@ -43,11 +45,15 @@ property NO_RDATA_WO_WRITE (rdata);
     (rdata != 0) |-> (write_happened);
 endproperty
 
+
+
 // Assertions
-AST_MEM0_ALWAYS_0_RDATA1: assert property (MEM0_ALWAYS_0(raddr1, rdata1));
-AST_MEM0_ALWAYS_0_RDATA2: assert property (MEM0_ALWAYS_0(raddr2, rdata2));
-AST_NO_RDATA_WO_WRITE_RDATA1: assert property (NO_RDATA_WO_WRITE(rdata1));
-AST_NO_RDATA_WO_WRITE_RDATA2: assert property (NO_RDATA_WO_WRITE(rdata2));
+AST_MEM0_ALWAYS_0_1: assert property (MEM0_ALWAYS_0(raddr1, rdata1));
+AST_MEM0_ALWAYS_0_2: assert property (MEM0_ALWAYS_0(raddr2, rdata2));
+AST_NO_RDATA_WO_WRITE1: assert property (NO_RDATA_WO_WRITE(rdata1));
+AST_NO_RDATA_WO_WRITE2: assert property (NO_RDATA_WO_WRITE(rdata2));
+
+
 
 // Covers
 generate
@@ -57,6 +63,37 @@ generate
     end
 endgenerate
 
+
+
+`ifndef SIM
+
+// Data integrity check (NDC only possible in formal!)
+
+bit [AWIDTH-1:0] addr_ndc; // Non-deterministic constant
+bit [DWIDTH-1:0] xptd_data; // Expected data
+bit wr_to_addr_ndc; // Write to addr_ndc location
+always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+        xptd_data <= '0;
+        wr_to_addr_ndc <= 0;
+    end else if (wen && waddr == addr_ndc) begin
+        xptd_data <= wdata;
+        wr_to_addr_ndc <= 1;
+    end
+end
+
+property DATA_INTEGRITY (raddr, rdata);
+    (wr_to_addr_ndc && raddr == addr_ndc) |-> (rdata == xptd_data);
+endproperty 
+
+AST_DATA_INTEGRITY1: assert property (DATA_INTEGRITY(raddr1, rdata1));
+AST_DATA_INTEGRITY2: assert property (DATA_INTEGRITY(raddr2, rdata2));
+
+ASM_ADDR_NDC_NOT_0: assume property (addr_ndc != '0);
+ASM_ADDR_NDC_CONST: assume property (addr_ndc == $past(addr_ndc));
+
 `endif
     
+`endif
+
 endmodule
