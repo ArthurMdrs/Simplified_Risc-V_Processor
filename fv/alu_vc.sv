@@ -1,12 +1,13 @@
-module alu_vc #(
-    int SWIDTH = 3,
+module alu_vc import typedefs_pkg::*; #(
+    // int SWIDTH = 3,
     int DWIDTH = 8
 ) (
 	input  logic [DWIDTH-1:0] res, 
 	input  logic              res_is_0,
 	input  logic [DWIDTH-1:0] src1,
 	input  logic [DWIDTH-1:0] src2,
-	input  logic [SWIDTH-1:0] sel
+	// input  logic [SWIDTH-1:0] sel
+    input  aluop_sel_t        sel
 );
 
 `ifdef SVA_ON

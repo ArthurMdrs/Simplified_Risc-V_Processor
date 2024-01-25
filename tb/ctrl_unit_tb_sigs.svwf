@@ -1,0 +1,54 @@
+
+#
+# Mnemonic Maps
+#
+mmap new  -reuse -name {Boolean as Logic} -radix %b -contents {{%c=FALSE -edgepriority 1 -shape low}
+{%c=TRUE -edgepriority 1 -shape high}}
+mmap new  -reuse -name {Example Map} -radix %x -contents {{%b=11???? -bgcolor orange -label REG:%x -linecolor yellow -shape bus}
+{%x=1F -bgcolor red -label ERROR -linecolor white -shape EVENT}
+{%x=2C -bgcolor red -label ERROR -linecolor white -shape EVENT}
+{%x=* -label %x -linecolor gray -shape bus}}
+
+array unset createdGroup
+array set createdGroup {}
+set id [waveform add -signals [subst  {
+	{[format {ctrl_unit_tb.clk}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {ctrl_unit_tb.rst_n}]}
+	} ]]
+set id [waveform add -cdivider divider]
+set id [waveform add -signals [subst  {
+	{[format {ctrl_unit_tb.instr}]}
+	} ]]
+waveform hierarchy expand $id
+set id2 [lindex [waveform hierarchy content $id] 0]
+waveform hierarchy collapse $id2
+waveform hierarchy collapse $id
+set id [waveform add -signals [subst  {
+	{[format {ctrl_unit_tb.pc_o[7:0]}]}
+	} ]]
+set id [waveform add -cdivider divider]
+set id [waveform add -signals [subst  {
+	{[format {ctrl_unit_tb.alu_sel[2:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {ctrl_unit_tb.alu_src}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {ctrl_unit_tb.rdata1_aluSrc1[7:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {ctrl_unit_tb.muxOut_aluSrc2[7:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {ctrl_unit_tb.alu_res[7:0]}]}
+	} ]]
+set id [waveform add -cdivider divider]
+set id [waveform add -signals [subst  {
+	{[format {ctrl_unit_tb.mem_clone[0:31]}]}
+	} ]]
+waveform hierarchy expand $id
+set id [waveform add -cdivider divider]
+
+waveform xview limits 0 14000ps

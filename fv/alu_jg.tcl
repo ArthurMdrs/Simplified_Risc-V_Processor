@@ -1,8 +1,9 @@
 clear -all
 
-analyze -sv12 +define+SVA_ON=1 ./alu_vc.sv
+analyze -sv12 +define+SVA_ON=1 ../rtl/pkg/typedefs_pkg.sv
 analyze -sv12 +define+SVA_ON=1 ../rtl/alu.sv
-elaborate -top alu -create_related_covers witness -parameter {DWIDTH} {8} -parameter {SWIDTH} {3}
+analyze -sv12 +define+SVA_ON=1 ./alu_vc.sv
+elaborate -top alu -create_related_covers witness -parameter {DWIDTH} {32}
 
 clock -none
 

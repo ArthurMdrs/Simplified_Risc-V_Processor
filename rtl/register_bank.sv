@@ -63,6 +63,9 @@ logic [DWIDTH-1:0] mem [2**AWIDTH];
 
 `endif
 
+// Memory address zero must be hardwired to zero
+assign mem[0] = '0;
+
     
 
 `ifdef SVA_ON

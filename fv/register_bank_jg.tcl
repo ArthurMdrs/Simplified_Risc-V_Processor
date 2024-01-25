@@ -12,7 +12,7 @@ if {$DEF_BSC_BLKS != ""} {
 
 analyze -sv12 +define+SVA_ON=1 ./register_bank_vc.sv
 analyze -sv12 +define+SVA_ON=1 $DEF_BSC_BLKS ../rtl/register_bank.sv
-elaborate -top register_bank -create_related_covers witness -parameter {DWIDTH} {16} -parameter {AWIDTH} {5}
+elaborate -top register_bank -create_related_covers witness -parameter {DWIDTH} {32} -parameter {AWIDTH} {5}
 
 if {$DEF_BSC_BLKS != ""} {
     assume -disable <embedded>::register_bank.mux_inst1.mux_vc_inst.ASM_VALID_SEL

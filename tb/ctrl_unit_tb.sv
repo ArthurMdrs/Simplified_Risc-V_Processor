@@ -1,56 +1,79 @@
-module alu_tb;
+module ctrl_unit_tb;
 
 import typedefs_pkg::*;
 
-localparam int AWIDTH = 3;
-localparam int ALU_SEL_W = 3;
+localparam int XLEN = 32;
+localparam int AWIDTH = 5;
 localparam int DWIDTH = 8;
-// localparam int MUX_SEL_W = $clog2(2);
+localparam int INSTR_MEM_SIZE = 2**8;
+localparam int INSTR_MEM_W = $clog2(INSTR_MEM_SIZE);
 
 // Primary inputs
-logic                 clk, rst_n;
-logic [AWIDTH-1:0]    raddr1, raddr2, waddr;
-logic [DWIDTH-1:0]    wdata;
-logic                 wen;
-// logic [ALU_SEL_W-1:0] alu_sel;
-aluop_sel_t           alu_sel;
-logic                 mux_sel;
-logic [DWIDTH-1:0]    some_const;
+logic clk;
+logic rst_n;
 
 // Primary outputs
-logic [DWIDTH-1:0] res;
+logic [DWIDTH-1:0] alu_res;
 logic              res_is_0;
 
 // Internal wires
-logic [DWIDTH-1:0] rdata1_aluSrc1;
-logic [DWIDTH-1:0] rdata2_muxSrc1;
-logic [DWIDTH-1:0] muxOut_aluSrc2;
-
-// ALU operations
-// typedef bit [ALU_SEL_W-1:0] sel_t;
-// localparam sel_t AND = 0, OR  = 1, ADD = 2, SUB = 6, SLT = 7;
+logic [INSTR_MEM_W-1:0] pc_i, pc_o;
+instr_t                 instr;
+logic                   wen;
+logic                   alu_src;
+aluop_sel_t             alu_sel;
+logic   [DWIDTH-1:0]    rdata1_aluSrc1;
+logic   [DWIDTH-1:0]    rdata2_muxSrc1;
+logic   [DWIDTH-1:0]    muxOut_aluSrc2;
 
 //==============   Module instantiations - BEGIN   ==============//
+register #(
+    .WIDTH(INSTR_MEM_W)
+) pc (
+	.reg_o(pc_o),
+	.reg_i(pc_i),
+	.clk, 
+	.rst_n
+);
+
+assign pc_i = pc_o + 1;
+
+mem_comb #(
+    .AWIDTH(INSTR_MEM_W),
+    .DWIDTH(XLEN)
+) instr_mem (
+    .rdata(instr),
+    .addr(pc_o)
+);
+
+ctrl_unit ctrl_unit_inst (
+	.alu_sel,
+    .alu_src, 
+    .wen, 
+	.opcode(instr.R.opcode),
+	.funct7(instr.R.funct7),
+	.funct3(instr.R.funct3)
+);
+
 register_bank #(
     .AWIDTH(AWIDTH),
     .DWIDTH(DWIDTH)
 ) register_bank_inst (
     .rdata1(rdata1_aluSrc1),
     .rdata2(rdata2_muxSrc1),
-    .raddr1,
-    .raddr2,
-    .wdata,
-    .waddr,
+    .raddr1(instr.R.rs1),
+    .raddr2(instr.R.rs2),
+    .wdata (alu_res),
+    .waddr (instr.R.rd),
     .wen,
     .clk,
     .rst_n
 );
 
 alu #(
-    .SWIDTH(ALU_SEL_W),
     .DWIDTH(DWIDTH)
 ) alu_inst (
-	.res, 
+	.res(alu_res), 
 	.res_is_0,
 	.src1(rdata1_aluSrc1),
 	.src2(muxOut_aluSrc2),
@@ -59,11 +82,11 @@ alu #(
 
 mux #(
     .N_INPUTS(2),
-    .DWIDTH(DWIDTH)
+    .DWIDTH(XLEN)
 ) mux_alu_src2 (
     .out(muxOut_aluSrc2),
-    .in({rdata2_muxSrc1, some_const}),
-    .sel(mux_sel)
+    .in({rdata2_muxSrc1, instr.I.imm}),
+    .sel(alu_src)
 );
 
 //==============   Module instantiations - END   ==============//
@@ -71,9 +94,10 @@ mux #(
 //=================   Simulation - BEGIN   =================//
 
 int n_mismatches;
-bit verbose = 0;
+bit verbose = 1;
 logic [DWIDTH-1:0] expected;
 logic [DWIDTH-1:0] mem_clone [2**AWIDTH];
+assign mem_clone = register_bank_inst.mem;
 
 localparam int PERIOD = 2;
 initial begin
@@ -89,24 +113,9 @@ initial begin
     
     reset ();
 
-    // Set constant value
-    some_const = 0;
-
-    // Write to memory
     write_mem();
-
-    // Read from memory
     read_mem();
-
-    // Tests with mux_sel = 0
-    mux_sel = 0;
-    repeat(20)
-        do_operation();
-
-    // Tests with mux_sel = 1
-    mux_sel = 1;
-    repeat(20)
-        do_operation();
+    repeat(7) @(negedge clk);
 
     $display("%t: Simulation end. Number of mismatches: %0d.", $time, n_mismatches);
 
@@ -120,7 +129,7 @@ end
 
 task reset ();
     rst_n = 0;
-    #3 rst_n = 1;
+    @(negedge clk) rst_n = 1;
     $display("%t: Reset done.", $time);
 endtask
 
@@ -146,40 +155,15 @@ function logic [DWIDTH-1:0] ref_model (logic [DWIDTH-1:0] op1, logic [DWIDTH-1:0
 endfunction
 
 task write_mem;
-    wen = 1;
-    for(int i = 0; i < 2**AWIDTH; i++) begin
-        @(negedge clk);
-        waddr = i;
-        assert(randomize(wdata));
-        mem_clone[i] = (i == 0) ? 0 : wdata;
-        if (verbose)
-            $display("%t: Writing 0x%h to memory address %0d.", $time, wdata, waddr);
-    end
-    @(negedge clk);
-    wen = 0;
+    $readmemh("instr.txt", instr_mem.mem);
 endtask
 
 task read_mem;
-    mux_sel = 1;
-    for(int i = 0; i < 2**AWIDTH; i++) begin
-        raddr1 = i;
-        #1step;
-        ast_rdata_valid: assert(rdata1_aluSrc1 == mem_clone[raddr1]);
+    // for(int i = 0; i < INSTR_MEM_SIZE; i++) begin
+    for(int i = 0; i < 20; i++) begin
         if (verbose)
-            $display("%t: Read 0x%h from memory address %0d.", $time, rdata1_aluSrc1, raddr1);
+            $display("%t: Read 0x%h from memory address %0d.", $time, instr_mem.mem[i], i);
     end
-endtask
-
-task do_operation ();
-    assert(randomize(raddr1, raddr2));
-    // assert(randomize(alu_sel) with {alu_sel inside {AND, OR, ADD, SUB, SLT};});
-    assert(randomize(alu_sel));
-    #1step;
-    ast_mux_out_valid: assert(muxOut_aluSrc2 == ((mux_sel) ? some_const : rdata2_muxSrc1));
-    expected = ref_model(rdata1_aluSrc1, muxOut_aluSrc2, alu_sel);
-    checkit(expected, res, alu_sel);
-    if (res_is_0 != (expected==0))
-        $display("%t: ERROR! Result is zero, but res_is_0 is not asserted. ", $time);
 endtask
 
 //==============   Tasks and functions - END   ==============//

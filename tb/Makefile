@@ -1,21 +1,21 @@
 SVA = +define+SVA_ON=1
 # SVA = 
 
-RTL = ../rtl/*.sv
+RTL = ../rtl/pkg/*.sv ../rtl/*.sv
 FV = ../fv/*.sv
 TB = ./*_tb.sv
-TOP = -top alu_tb
+TOP = -top ctrl_unit_tb
 
-# GUI = -gui
-GUI =
+GUI = -gui
+# GUI =
 
 SEED = -svseed 2
 
 run: sim
 
 sim:
-	xrun -64bit -sv +DEFINE+SIM $(FV) $(RTL) $(TB) $(SVA) $(TOP) \
-		 -timescale 1ns/1ns -access +rwc $(SEED) $(GUI)
+	xrun -64bit -sv +DEFINE+SIM $(RTL) $(FV) $(TB) $(SVA) $(TOP) \
+		 -timescale 1ns/1ps -access +rwc $(SEED) $(GUI)
 
 clean:
-	rm -rf xcelium.d xrun* .simvision
+	rm -rf xcelium.d xrun* .simvision .symbol* waves*

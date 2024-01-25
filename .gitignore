@@ -5,4 +5,7 @@ waves*
 *.log
 *.diag
 jgproject
+.symbol*
 ignore.txt
+README.md
+ignore/
