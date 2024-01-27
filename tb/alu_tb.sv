@@ -1,21 +1,27 @@
+/* 
+    This was the 1st testbench.
+
+    The only RTL I had done was register_bank, alu and mux.
+
+    This makes it easier to test the ALU operations.
+
+*/
+
 module alu_tb;
 
 import typedefs_pkg::*;
 
 localparam int AWIDTH = 3;
-localparam int ALU_SEL_W = 3;
-localparam int DWIDTH = 8;
-// localparam int MUX_SEL_W = $clog2(2);
+localparam int DWIDTH = 32;
 
 // Primary inputs
-logic                 clk, rst_n;
-logic [AWIDTH-1:0]    raddr1, raddr2, waddr;
-logic [DWIDTH-1:0]    wdata;
-logic                 wen;
-// logic [ALU_SEL_W-1:0] alu_sel;
-aluop_sel_t           alu_sel;
-logic                 mux_sel;
-logic [DWIDTH-1:0]    some_const;
+logic              clk, rst_n;
+logic [AWIDTH-1:0] raddr1, raddr2, waddr;
+logic [DWIDTH-1:0] wdata;
+logic              wen;
+aluop_sel_t        alu_sel;
+logic              mux_sel;
+logic [DWIDTH-1:0] some_const;
 
 // Primary outputs
 logic [DWIDTH-1:0] res;
@@ -25,10 +31,6 @@ logic              res_is_0;
 logic [DWIDTH-1:0] rdata1_aluSrc1;
 logic [DWIDTH-1:0] rdata2_muxSrc1;
 logic [DWIDTH-1:0] muxOut_aluSrc2;
-
-// ALU operations
-// typedef bit [ALU_SEL_W-1:0] sel_t;
-// localparam sel_t AND = 0, OR  = 1, ADD = 2, SUB = 6, SLT = 7;
 
 //==============   Module instantiations - BEGIN   ==============//
 register_bank #(
@@ -47,7 +49,6 @@ register_bank #(
 );
 
 alu #(
-    .SWIDTH(ALU_SEL_W),
     .DWIDTH(DWIDTH)
 ) alu_inst (
 	.res, 
@@ -90,7 +91,7 @@ initial begin
     reset ();
 
     // Set constant value
-    some_const = 0;
+    some_const = 2;
 
     // Write to memory
     write_mem();
@@ -100,13 +101,17 @@ initial begin
 
     // Tests with mux_sel = 0
     mux_sel = 0;
-    repeat(20)
-        do_operation();
+    alu_sel = alu_sel.first();
+    do begin
+        repeat(10)
+            do_operation(0);
+        alu_sel = alu_sel.next();
+    end while (alu_sel != alu_sel.first());
 
     // Tests with mux_sel = 1
     mux_sel = 1;
     repeat(20)
-        do_operation();
+        do_operation(1);
 
     $display("%t: Simulation end. Number of mismatches: %0d.", $time, n_mismatches);
 
@@ -129,19 +134,28 @@ task checkit (logic [DWIDTH-1:0] expected, logic [DWIDTH-1:0] actual, aluop_sel_
         $display("%t: ERROR! Expected = %h. Actual = %h. Op = %s.", $time, expected, actual, op.name());
         n_mismatches++;
     end
+        
 endtask
 
 function logic [DWIDTH-1:0] ref_model (logic [DWIDTH-1:0] op1, logic [DWIDTH-1:0] op2, aluop_sel_t op);
     logic [DWIDTH-1:0] res;
-    res = 0;
+    logic [4:0]        shamt;
+    res   = 0;
+    shamt = op2[4:0];
     case (op)
-        AND: res = op1 & op2;
-        OR : res = op1 | op2;
-        ADD: res = op1 + op2;
-        XOR: res = op1 ^ op2;
-        SUB: res = op1 - op2;
-        SLT: res = op1 < op2;
+        AND : res = op1 & op2;
+        OR  : res = op1 | op2;
+        ADD : res = op1 + op2;
+        XOR : res = op1 ^ op2;
+        SUB : res = $signed(op1) - $signed(op2);
+        SLT : res = $signed(op1) < $signed(op2);
+        SLTU: res = op1 < op2;
+        SLL : res = op1 << shamt;
+        SRL : res = op1 >> shamt;
+        SRA : res = $signed(op1) >>> shamt;
     endcase
+    if (verbose)
+        $display("%t: [refmod] op = %s. op1 = %h. op2 = %h. res = %h.", $time, op.name(), op1, op2, res);
     return res;
 endfunction
 
@@ -170,10 +184,11 @@ task read_mem;
     end
 endtask
 
-task do_operation ();
+task do_operation (bit rand_sel);
     assert(randomize(raddr1, raddr2));
     // assert(randomize(alu_sel) with {alu_sel inside {AND, OR, ADD, SUB, SLT};});
-    assert(randomize(alu_sel));
+    if (rand_sel)
+        assert(randomize(alu_sel));
     #1step;
     ast_mux_out_valid: assert(muxOut_aluSrc2 == ((mux_sel) ? some_const : rdata2_muxSrc1));
     expected = ref_model(rdata1_aluSrc1, muxOut_aluSrc2, alu_sel);

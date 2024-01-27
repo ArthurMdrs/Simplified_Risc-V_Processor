@@ -1,14 +1,14 @@
 /* 
-    This was the 2nd testbench.
+    This was the 3rd testbench.
 
     RTL I had done at the time: register_bank, alu, mux, register (program counter), 
-    rom_mem (instruction memory), ctrl_unit and imm_ext.
+    rom_mem (instruction memory), ctrl_unit (supporting more isntructions), imm_ext and data_mem.
 
-    Use this to test the instructions are properly decoded by the control unit.
+    This is basically an upgrade from the 2nd testbench.
 
 */
 
-module ctrl_unit_tb;
+module data_mem_tb;
 
 import typedefs_pkg::*;
 
@@ -17,6 +17,7 @@ localparam int AWIDTH = 5;
 localparam int DWIDTH = 8;
 localparam int INSTR_MEM_SIZE = 2**8;
 localparam int INSTR_MEM_W = $clog2(INSTR_MEM_SIZE);
+localparam int DATA_MEM_SIZE = 2**8;
 
 // Primary inputs
 logic clk;
@@ -29,9 +30,9 @@ logic            res_is_0;
 // Internal wires
 logic [INSTR_MEM_W-1:0] pc_i, pc_o;
 instr_t                 instr;
-aluop_sel_t             alu_sel;
-logic                   alu_src;
 logic                   reg_wen;
+logic                   alu_src;
+aluop_sel_t             alu_sel;
 logic   [XLEN-1:0]      rdata1_aluSrc1;
 logic   [XLEN-1:0]      rdata2_muxSrc1;
 logic   [XLEN-1:0]      muxOut_aluSrc2;
@@ -99,7 +100,7 @@ mux #(
     .DWIDTH(XLEN)
 ) mux_alu_src2 (
     .out(muxOut_aluSrc2),
-    .in({ rdata2_muxSrc1,  imm_ext }),
+    .in({rdata2_muxSrc1, imm_ext}),
     .sel(alu_src)
 );
 

@@ -6,15 +6,14 @@ FV = ../fv/*.sv
 TB = ./*_tb.sv
 TOP = -top ctrl_unit_tb
 
-GUI = -gui
-# GUI =
+GUI = 
 
 SEED = -svseed 2
 
 run: sim
 
 sim:
-	xrun -64bit -sv +DEFINE+SIM $(RTL) $(FV) $(TB) $(SVA) $(TOP) \
+	xrun -64bit -sv +define+SIM $(RTL) $(FV) $(TB) $(SVA) $(TOP) \
 		 -timescale 1ns/1ps -access +rwc $(SEED) $(GUI)
 
 clean:

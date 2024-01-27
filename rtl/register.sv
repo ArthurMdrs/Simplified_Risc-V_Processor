@@ -7,11 +7,11 @@ module register #(
 	input  logic             rst_n
 );
 	
-	always_ff @(posedge clk or negedge rst_n) begin
-        if (!rst_n)
-            reg_o <= 0;
-        else
-            reg_o <= reg_i;
-    end
+always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n)
+        reg_o <= 0;
+    else
+        reg_o <= reg_i;
+end
 	
 endmodule
