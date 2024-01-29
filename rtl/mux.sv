@@ -19,6 +19,8 @@ end
 
 `ifdef SVA_ON
 
+`ifndef SIM
+
 bind mux mux_vc #(
     .N_INPUTS(N_INPUTS),
     .DWIDTH(DWIDTH)
@@ -27,6 +29,8 @@ bind mux mux_vc #(
     .in,
     .sel
 );
+
+`endif
 
 `endif
     

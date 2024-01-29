@@ -25,7 +25,6 @@ always_comb begin
         case (funct3)
             3'h0: begin
                 if (funct7 == 7'h00 || opcode == OP_IMM) alu_sel = ADD; 
-                // if (funct7 == 7'h20 && opcode == OP    ) alu_sel = SUB; 
                 else if (funct7 == 7'h20)                alu_sel = SUB; 
             end
             3'h1: 
@@ -45,27 +44,6 @@ always_comb begin
             3'h7:
                 alu_sel = AND;
         endcase
-    // else if (opcode == OP_IMM)
-    //     case (funct3)
-    //         3'h0:
-    //             alu_sel = ADD;
-    //         3'h1: 
-    //             ;// alu_sel = SLL;
-    //         3'h2: 
-    //             alu_sel = SLT;
-    //         3'h3: 
-    //             ;// alu_sel = SLTU;
-    //         3'h4:
-    //             alu_sel = XOR;
-    //         3'h5: begin
-    //             // if (funct7 == 7'h00) alu_sel = SRL; 
-    //             // if (funct7 == 7'h20) alu_sel = SRA; 
-    //         end
-    //         3'h6:
-    //             alu_sel = OR;
-    //         3'h7:
-    //             alu_sel = AND;
-    //     endcase
 end
 
 // Drive ALU source selection
