@@ -3,19 +3,16 @@ module ctrl_unit import typedefs_pkg::*; #(
 ) (
 	output aluop_sel_t alu_sel,
     output logic alu_src, 
-	// output logic Jump, 
-    // output logic MemtoReg, 
-    // output logic BNE, 
-    // output logic BEQ, 
-    // output logic RegDst, 
     output logic mem_wen, 
     output logic reg_wen, 
-    output logic imm_src, 
+    output logic branch, 
+    // output logic [1:0] imm_src, 
     output logic reg_wdata_src, 
-    // output logic Ext, 
 	input  logic [6:0] opcode,
 	input  logic [6:0] funct7,
-	input  logic [2:0] funct3
+	input  logic [2:0] funct3,
+    input  logic ops_equal,
+    input  logic op1_lt_op2
 );
 
 // Drive ALU operation selection (typedef in pkg)
@@ -44,6 +41,22 @@ always_comb begin
             3'h7:
                 alu_sel = AND;
         endcase
+
+    else if (opcode == BRANCH)
+        case (funct3)
+            3'h0: 
+                alu_sel = SUB;  // beq
+            3'h1: 
+                alu_sel = SUB;  // bne
+            3'h4:
+                alu_sel = SLT;  // blt
+            3'h5: 
+                alu_sel = SLT;  // bge
+            3'h6:
+                alu_sel = SLTU; // bltu
+            3'h7:
+                alu_sel = SLTU; // bgeu
+        endcase
 end
 
 // Drive ALU source selection
@@ -56,6 +69,7 @@ always_comb begin
         OP_IMM: alu_src = 1;
         LOAD  : alu_src = 1;
         STORE : alu_src = 1;
+        BRANCH: alu_src = 0;
     endcase
 end
 
@@ -63,12 +77,42 @@ end
 assign mem_wen = (opcode == STORE);
 
 // Drive register write enable
-assign reg_wen = (opcode != STORE);
+// assign reg_wen = (opcode != STORE);
+assign reg_wen = (opcode inside {OP, OP_IMM, LOAD});
 
 // Drive immediate operand source
 // imm_src = 0 -> the immediate is instr.I.imm (a.k.a. instr[31:20])
-// imm_src = 1 -> the immediate is {instr.S.imm_up, instr.S.imm_dn} (a.k.a. {instr[31:25], instr[31:25]11:7)
-assign imm_src = (opcode == STORE);
+// imm_src = 1 -> the immediate is {instr.S.imm_up, instr.S.imm_dn} (a.k.a. {instr[31:25], instr[11:7]})
+// assign imm_src = (opcode == STORE);
+// always_comb begin
+//     imm_src = 'x;
+//     case (opcode)
+//         OP_IMM: imm_src = 0;
+//         LOAD  : imm_src = 0;
+//         STORE : imm_src = 1;
+//         BRANCH: imm_src = 2;
+//     endcase
+// end
+
+// Drive branch signal
+always_comb begin
+    branch = 0;
+    if(opcode == BRANCH)
+        case (1'b1)
+            (funct3==0 &&  ops_equal):  // beq
+                branch = 1;
+            (funct3==1 && !ops_equal):  // bne
+                branch = 1;
+            (funct3==4 &&  op1_lt_op2): // blt
+                branch = 1;
+            (funct3==5 && !op1_lt_op2): // bge
+                branch = 1;
+            (funct3==6 &&  op1_lt_op2): // bltu
+                branch = 1;
+            (funct3==7 && !op1_lt_op2): // bgeu
+                branch = 1;
+        endcase
+end
 
 // Drive result source
 // reg_wdata_src = 0 -> reg bank wdata is ALU result

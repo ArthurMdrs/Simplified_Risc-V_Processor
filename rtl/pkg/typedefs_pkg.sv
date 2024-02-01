@@ -65,11 +65,8 @@ package typedefs_pkg;
         J_instr J;
     } instr_t;
 
-    // typedef enum logic [2:0] {
-    //     R, I, S, B, U, J
-    // } instr_type_t;
-
     // opcodes
-    localparam logic [6:0] OP = 7'b011_0011, OP_IMM = 7'b001_0011, LOAD = 7'b000_0011, STORE = 7'b010_0011;
+    localparam logic [6:0] OP     = 7'b011_0011, OP_IMM = 7'b001_0011, LOAD = 7'b000_0011, STORE = 7'b010_0011,
+                           BRANCH = 7'b110_0011;
 
 endpackage 

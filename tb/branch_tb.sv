@@ -1,27 +1,27 @@
 /* 
-    This was the 3rd testbench.
+    This was the 4rd testbench.
 
-    RTL I had done at the time: register_bank, alu, mux, register (program counter), 
-    rom_mem (instruction memory), ctrl_unit (supporting more isntructions), imm_extender,
-    load_extender and data_mem.
+    RTL I had done at the time: alu, ctrl_unit, data_mem, imm_extender, load_extender,
+    mux, register_bank, register (program counter), rom_mem (instruction memory) and
+    next_pc_value.
 
-    This is basically an upgrade from the 2nd testbench.
+    This is an upgrade from the 3nd testbench.
 
-    Opcodes supported: OP, OP-IMM, LOAD, STORE.
+    Opcodes supported: OP, OP-IMM, LOAD, STORE, BRANCH.
 
 */
 
-module data_mem_tb;
+module branch_tb;
 
 import typedefs_pkg::*;
 
 localparam int XLEN = 32;
 localparam int AWIDTH = 5;
 localparam int DWIDTH = 8;
-localparam int INSTR_MEM_SIZE = 2**8 * 4;
-localparam int INSTR_MEM_W = $clog2(INSTR_MEM_SIZE);
-localparam int DATA_MEM_SIZE = 2**8 * 4;
-localparam int DATA_MEM_W = $clog2(DATA_MEM_SIZE);
+localparam int INSTR_MEM_SIZE = 2**8 * 4;           // holds 2**8 instructions
+localparam int IMEM_AWIDTH = $clog2(INSTR_MEM_SIZE);
+localparam int DATA_MEM_SIZE = 2**8 * 4;            // holds 2**8 words of data
+localparam int DMEM_AWIDTH = $clog2(DATA_MEM_SIZE);
 
 // Primary inputs
 logic clk;
@@ -33,18 +33,19 @@ logic            res_is_0;
 logic [XLEN-1:0] dmem_rdata;
 
 // Internal wires
-logic [INSTR_MEM_W-1:0] pc_i, pc_o;
+logic [IMEM_AWIDTH-1:0] pc_i, pc_o;
 instr_t                 instr;
 aluop_sel_t             alu_sel;
 logic                   alu_src;
 logic                   mem_wen;
 logic                   reg_wen;
+logic                   branch;
 // logic   [     1:0]      imm_src;
 logic                   reg_wdata_src;
 logic   [XLEN-1:0]      rdata1_aluSrc1;
 logic   [XLEN-1:0]      rdata2;
 logic   [XLEN-1:0]      alu_src2;
-logic   [XLEN-1:0]      imm_ext;
+logic   [XLEN-1:0]      imm;
 logic   [XLEN-1:0]      load_ext;
 logic   [XLEN-1:0]      reg_wdata;
 logic   [     3:0]      mem_wdata_mask; // Each bit set = valid byte in wdata
@@ -52,8 +53,17 @@ logic   [     3:0]      mem_rdata_mask; // Unused!
 
 //==============   Module instantiations - BEGIN   ==============//
 
+next_pc_value #(
+    .WIDTH(XLEN)
+) next_pc_val_inst (
+    .next_pc(pc_i),
+    .curr_pc(pc_o), 
+    .branch,
+    .imm
+);
+
 register #(
-    .WIDTH(INSTR_MEM_W)
+    .WIDTH(IMEM_AWIDTH)
 ) pc (
 	.reg_o(pc_o),
 	.reg_i(pc_i),
@@ -61,10 +71,8 @@ register #(
 	.rst_n
 );
 
-assign pc_i = pc_o + 4;
-
 rom_mem #(
-    .AWIDTH(INSTR_MEM_W),
+    .AWIDTH(IMEM_AWIDTH),
     .DWIDTH(XLEN)
 ) instr_mem (
     .rdata(instr),
@@ -75,15 +83,15 @@ ctrl_unit ctrl_unit_inst (
 	.alu_sel,
     .alu_src, 
     .mem_wen, 
-    .reg_wen,
-    .branch(),
+    .reg_wen, 
+    .branch,
     // .imm_src, 
     .reg_wdata_src,
 	.opcode(instr.R.opcode),
 	.funct7(instr.R.funct7),
 	.funct3(instr.R.funct3),
-    .ops_equal(0),
-    .op1_lt_op2(0)
+    .ops_equal(res_is_0),
+    .op1_lt_op2(alu_res[0])
 );
 
 mux #(
@@ -125,14 +133,14 @@ mux #(
     .DWIDTH(XLEN)
 ) mux_alu_src2 (
     .out(alu_src2),
-    .in({ rdata2,  imm_ext }),
+    .in({ rdata2,  imm }),
     .sel(alu_src)
 );
 
 imm_extender #(
     .DWIDTH(XLEN)
 ) imm_ext_inst (
-    .imm_ext,
+    .imm_ext(imm),
     .instr
 );
 
@@ -146,7 +154,7 @@ always_comb begin
 end
 
 data_mem #(
-    .AWIDTH(DATA_MEM_W),
+    .AWIDTH(DMEM_AWIDTH),
     .DWIDTH(XLEN)
 ) data_mem_inst (
     .rdata(dmem_rdata),
@@ -177,17 +185,12 @@ logic [XLEN-1:0] expected;
 
 logic [XLEN-1:0] regs_clone [2**AWIDTH];
 assign regs_clone = register_bank_inst.mem;
-logic [XLEN-1:0] dmem_clone [2**AWIDTH];
+logic [XLEN-1:0] dmem_clone [DATA_MEM_SIZE/4];
 always_comb foreach(dmem_clone[i]) dmem_clone[i] = data_mem_inst.mem[i*4+:4];
 
-logic [XLEN-1:0] xptd_regs [32];
-logic [XLEN-1:0] xptd_dmem [32];
+logic [XLEN-1:0] xptd_dmem [DATA_MEM_SIZE/4];
 
-// string program_to_run = "programs/prog_ST_LD.txt";
-// string prog_file = "programs/regs_ST_LD.txt";
-// string dmem_file = "programs/dmem_ST_LD.txt";
-
-string prog_name = "ST_LD";
+string prog_name = "WR_ALL_MEM";
 string prog_file = {"programs/", prog_name, "_prog.txt"};
 string dmem_file = {"programs/", prog_name, "_data.txt"};
 
@@ -218,18 +221,13 @@ initial begin
         @(negedge clk);
     end while (instr !== 'x);
 
-    // Get expected register values (got from RARS simulator)
-    // load_xptd_regs();
-    // if (verbose)
-    //     foreach (xptd_regs[i])
-    //         $display("xptd_regs[%2d] = %h. regs[%2d] = %h.", i, xptd_regs[i], i, regs_clone[i]);
-    // checkit("regs", xptd_regs, regs_clone);
-
     // Get expected data memory values (got from RARS simulator)
     load_xptd_dmem();
     if (verbose)
-        foreach (xptd_dmem[i])
+        foreach (xptd_dmem[i]) begin
+            // if(i == 64) break;
             $display("xptd_dmem[%2d] = %h. dmem[%2d] = %h.", i, xptd_dmem[i], i, dmem_clone[i]);
+        end
     checkit("dmem", xptd_dmem, dmem_clone);
 
 
@@ -253,23 +251,24 @@ task load_instr_mem;
     logic [XLEN-1:0] mem [INSTR_MEM_SIZE];
     $readmemh(prog_file, mem);
     foreach(mem[i]) instr_mem.mem[i*4+:4] = mem[i];
+    // foreach(dmem_clone[i]) dmem_clone[i] = data_mem_inst.mem[i*4+:4];
+    // $readmemh(prog_file, instr_mem.mem);
 endtask
 
 task print_instr_mem;
+    // for(int i = 0; instr_mem.mem[i] != '0; i++) begin
+    //     $display("%t: Read 0x%h from memory address %0d.", $time, instr_mem.mem[i], i);
+    // end
     for(int i = 0; instr_mem.mem[i*4+:4] != '0; i++) begin
         $display("%t: Read 0x%h from memory address %0d.", $time, instr_mem.mem[i*4+:4], i);
     end
 endtask
 
-task load_xptd_regs;
-    $readmemh(prog_file, xptd_regs);
-endtask
-
 task load_xptd_dmem;
-    $readmemh(dmem_file, xptd_dmem, 0, 31);
+    $readmemh(dmem_file, xptd_dmem);
 endtask
 
-task checkit (string what_mem, logic [XLEN-1:0] expected [32], logic [XLEN-1:0] actual [32]);
+task checkit (string what_mem, logic [XLEN-1:0] expected [], logic [XLEN-1:0] actual []);
     foreach (expected[i]) begin
         if (expected[i] != actual[i]) begin
             n_mismatches++;

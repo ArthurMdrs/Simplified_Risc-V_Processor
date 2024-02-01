@@ -1,9 +1,0 @@
-// Simple program to test simple instructions
-
-0030_0093 // addi x1, x0, 3
-0090_0113 // addi x2, x0, 9
-0020_8133 // add x2, x1, x2
-0020_f1b3 // and x3, x1, x2
-0020_e233 // or x4, x1, x2
-0041_a2b3 // slt x5, x3, x4
-4052_0333 // sub x6, x4, x5

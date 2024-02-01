@@ -5,6 +5,8 @@
 
     This makes it easier to test the ALU operations.
 
+    Opcodes supported: OP.
+
 */
 
 module alu_tb;
@@ -72,7 +74,7 @@ mux #(
 //=================   Simulation - BEGIN   =================//
 
 int n_mismatches;
-bit verbose = 0;
+bit verbose = 1;
 logic [DWIDTH-1:0] expected;
 logic [DWIDTH-1:0] mem_clone [2**AWIDTH];
 

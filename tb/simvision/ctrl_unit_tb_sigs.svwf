@@ -21,9 +21,6 @@ set id [waveform add -cdivider divider]
 set id [waveform add -signals [subst  {
 	{[format {ctrl_unit_tb.instr}]}
 	} ]]
-waveform hierarchy expand $id
-set id2 [lindex [waveform hierarchy content $id] 0]
-waveform hierarchy collapse $id2
 waveform hierarchy collapse $id
 set id [waveform add -signals [subst  {
 	{[format {ctrl_unit_tb.pc_o[7:0]}]}
@@ -46,9 +43,8 @@ set id [waveform add -signals [subst  {
 	} ]]
 set id [waveform add -cdivider divider]
 set id [waveform add -signals [subst  {
-	{[format {ctrl_unit_tb.mem_clone[0:31]}]}
+	{[format {ctrl_unit_tb.regs_clone[0:31]}]}
 	} ]]
-waveform hierarchy expand $id
 set id [waveform add -cdivider divider]
 
-waveform xview limits 0 14000ps
+waveform xview limits 84000ps 98000ps

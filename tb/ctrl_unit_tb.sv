@@ -6,6 +6,8 @@
 
     Use this to test the instructions are properly decoded by the control unit.
 
+    Opcodes supported: OP, OP-IMM.
+
 */
 
 module ctrl_unit_tb;
@@ -15,7 +17,7 @@ import typedefs_pkg::*;
 localparam int XLEN = 32;
 localparam int AWIDTH = 5;
 localparam int DWIDTH = 8;
-localparam int INSTR_MEM_SIZE = 2**8;
+localparam int INSTR_MEM_SIZE = 2**8 * 4;
 localparam int INSTR_MEM_W = $clog2(INSTR_MEM_SIZE);
 
 // Primary inputs
@@ -47,7 +49,7 @@ register #(
 	.rst_n
 );
 
-assign pc_i = pc_o + 1;
+assign pc_i = pc_o + 4;
 
 rom_mem #(
     .AWIDTH(INSTR_MEM_W),
@@ -62,11 +64,13 @@ ctrl_unit ctrl_unit_inst (
     .alu_src, 
     .mem_wen(), 
     .reg_wen, 
-    .imm_src(), 
+    .branch(),
     .reg_wdata_src(),
 	.opcode(instr.R.opcode),
 	.funct7(instr.R.funct7),
-	.funct3(instr.R.funct3)
+	.funct3(instr.R.funct3),
+    .ops_equal(0),
+    .op1_lt_op2(0)
 );
 
 register_bank #(
@@ -103,7 +107,7 @@ mux #(
     .sel(alu_src)
 );
 
-imm_ext #(
+imm_extender #(
     .DWIDTH(XLEN)
 ) imm_ext_inst (
     .imm_ext,
@@ -125,7 +129,7 @@ string program_to_run = "programs/prog_OP-IMM.txt";
 string xptd_regs_file = "programs/regs_OP-IMM.txt";
 
 localparam int PERIOD = 2;
-localparam int MAX_CYCLES = 100;
+localparam int MAX_CYCLES = 1000;
 initial begin
     clk = 0; 
     repeat(MAX_CYCLES) #(PERIOD/2) clk = ~clk;
@@ -181,35 +185,15 @@ task reset ();
     $display("%t: Reset done.", $time);
 endtask
 
-task checkit (logic [XLEN-1:0] expected, logic [XLEN-1:0] actual, aluop_sel_t op);
-    if (expected != actual) begin
-        $display("%t: ERROR! Expected = %h. Actual = %h. Op = %s.", $time, expected, actual, op.name());
-        n_mismatches++;
-    end
-endtask
-
-function logic [XLEN-1:0] ref_model (logic [XLEN-1:0] op1, logic [XLEN-1:0] op2, aluop_sel_t op);
-    logic [XLEN-1:0] res;
-    res = 0;
-    case (op)
-        AND: res = op1 & op2;
-        OR : res = op1 | op2;
-        ADD: res = op1 + op2;
-        XOR: res = op1 ^ op2;
-        SUB: res = op1 - op2;
-        SLT: res = op1 < op2;
-    endcase
-    return res;
-endfunction
-
 task load_instr_mem;
-    $readmemh(program_to_run, instr_mem.mem);
+    logic [XLEN-1:0] mem [INSTR_MEM_SIZE];
+    $readmemh(program_to_run, mem);
+    foreach(mem[i]) instr_mem.mem[i*4+:4] = mem[i];
 endtask
 
 task print_instr_mem;
-    // for(int i = 0; i < INSTR_MEM_SIZE; i++) begin
-    for(int i = 0; i < 20; i++) begin
-        $display("%t: Read 0x%h from memory address %0d.", $time, instr_mem.mem[i], i);
+    for(int i = 0; instr_mem.mem[i*4+:4] != '0; i++) begin
+        $display("%t: Read 0x%h from memory address %0d.", $time, instr_mem.mem[i*4+:4], i);
     end
 endtask
 
