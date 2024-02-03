@@ -6,7 +6,6 @@ module ctrl_unit import typedefs_pkg::*; #(
     output logic mem_wen, 
     output logic reg_wen, 
     output logic branch, 
-    // output logic [1:0] imm_src, 
     output logic reg_wdata_src, 
 	input  logic [6:0] opcode,
 	input  logic [6:0] funct7,
@@ -77,22 +76,7 @@ end
 assign mem_wen = (opcode == STORE);
 
 // Drive register write enable
-// assign reg_wen = (opcode != STORE);
 assign reg_wen = (opcode inside {OP, OP_IMM, LOAD});
-
-// Drive immediate operand source
-// imm_src = 0 -> the immediate is instr.I.imm (a.k.a. instr[31:20])
-// imm_src = 1 -> the immediate is {instr.S.imm_up, instr.S.imm_dn} (a.k.a. {instr[31:25], instr[11:7]})
-// assign imm_src = (opcode == STORE);
-// always_comb begin
-//     imm_src = 'x;
-//     case (opcode)
-//         OP_IMM: imm_src = 0;
-//         LOAD  : imm_src = 0;
-//         STORE : imm_src = 1;
-//         BRANCH: imm_src = 2;
-//     endcase
-// end
 
 // Drive branch signal
 always_comb begin

@@ -4,7 +4,7 @@ SVA = +define+SVA_ON=1
 RTL = ../rtl/pkg/*.sv ../rtl/*.sv
 FV = ../fv/*.sv
 TB = ./*_tb.sv
-TOP = -top data_mem_tb
+TOP = -top branch_tb
 
 SEED = -svseed 2
 

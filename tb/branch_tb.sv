@@ -40,7 +40,6 @@ logic                   alu_src;
 logic                   mem_wen;
 logic                   reg_wen;
 logic                   branch;
-// logic   [     1:0]      imm_src;
 logic                   reg_wdata_src;
 logic   [XLEN-1:0]      rdata1_aluSrc1;
 logic   [XLEN-1:0]      rdata2;
@@ -84,8 +83,7 @@ ctrl_unit ctrl_unit_inst (
     .alu_src, 
     .mem_wen, 
     .reg_wen, 
-    .branch,
-    // .imm_src, 
+    .branch, 
     .reg_wdata_src,
 	.opcode(instr.R.opcode),
 	.funct7(instr.R.funct7),
@@ -251,14 +249,9 @@ task load_instr_mem;
     logic [XLEN-1:0] mem [INSTR_MEM_SIZE];
     $readmemh(prog_file, mem);
     foreach(mem[i]) instr_mem.mem[i*4+:4] = mem[i];
-    // foreach(dmem_clone[i]) dmem_clone[i] = data_mem_inst.mem[i*4+:4];
-    // $readmemh(prog_file, instr_mem.mem);
 endtask
 
 task print_instr_mem;
-    // for(int i = 0; instr_mem.mem[i] != '0; i++) begin
-    //     $display("%t: Read 0x%h from memory address %0d.", $time, instr_mem.mem[i], i);
-    // end
     for(int i = 0; instr_mem.mem[i*4+:4] != '0; i++) begin
         $display("%t: Read 0x%h from memory address %0d.", $time, instr_mem.mem[i*4+:4], i);
     end

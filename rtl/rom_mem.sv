@@ -8,12 +8,10 @@ module rom_mem #(
 
 // Internal memory
 localparam MEMSIZE = 2**AWIDTH;
-// logic [DWIDTH-1:0] mem [2**AWIDTH];
 logic [MEMSIZE-1:0] [7:0] mem;
 
 // Drive read data
 always_comb begin
-    // rdata = mem[addr];
     rdata = mem[addr+:4];
 end
 

@@ -183,10 +183,6 @@ always_comb foreach(dmem_clone[i]) dmem_clone[i] = data_mem_inst.mem[i*4+:4];
 logic [XLEN-1:0] xptd_regs [32];
 logic [XLEN-1:0] xptd_dmem [32];
 
-// string program_to_run = "programs/prog_ST_LD.txt";
-// string prog_file = "programs/regs_ST_LD.txt";
-// string dmem_file = "programs/dmem_ST_LD.txt";
-
 string prog_name = "ST_LD";
 string prog_file = {"programs/", prog_name, "_prog.txt"};
 string dmem_file = {"programs/", prog_name, "_data.txt"};
@@ -217,13 +213,6 @@ initial begin
     do begin
         @(negedge clk);
     end while (instr !== 'x);
-
-    // Get expected register values (got from RARS simulator)
-    // load_xptd_regs();
-    // if (verbose)
-    //     foreach (xptd_regs[i])
-    //         $display("xptd_regs[%2d] = %h. regs[%2d] = %h.", i, xptd_regs[i], i, regs_clone[i]);
-    // checkit("regs", xptd_regs, regs_clone);
 
     // Get expected data memory values (got from RARS simulator)
     load_xptd_dmem();

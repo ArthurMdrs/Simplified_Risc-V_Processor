@@ -1,6 +1,7 @@
 module data_mem #(
     int AWIDTH = 8,
-    int DWIDTH = 8
+    int DWIDTH = 8,
+    localparam int MWIDTH = DWIDTH/8
 ) (
     output logic [DWIDTH-1:0] rdata,
     input  logic [DWIDTH-1:0] wdata,
@@ -9,7 +10,7 @@ module data_mem #(
     input  logic              clk,
     input  logic              rst_n,
     // input  logic [3:0]        rdata_mask,
-    input  logic [3:0]        wdata_mask
+    input  logic [MWIDTH-1:0] wdata_mask
 );
 
 // Internal memory
@@ -43,7 +44,8 @@ bind data_mem data_mem_vc #(
     .addr,
     .wen,
     .clk,
-    .rst_n
+    .rst_n,
+    .wdata_mask
 );
 
 `endif

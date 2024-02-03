@@ -17,32 +17,16 @@ always_comb
         AND : res = src1 & src2;
         OR  : res = src1 | src2;
         ADD : res = src1 + src2;
-        // SUB: res = src1 + ~src2 + 1;
         SUB : res = src1 - src2;
         XOR : res = src1 ^ src2;
         SLT : res = (src1_s < src2_s);
         SLTU: res = (src1   < src2  );
-        SLL : res = src1 << src2[4:0];
-        SRL : res = src1 >> src2[4:0];
+        SLL : res = src1   <<  src2[4:0];
+        SRL : res = src1   >>  src2[4:0];
         SRA : res = src1_s >>> src2[4:0];
         default: res = 0;
     endcase
 
 assign res_is_0 = (res == 0);
 
-
-    
-`ifdef SVA_ON
-
-bind alu alu_vc #(
-    .DWIDTH(DWIDTH)
-) alu_vc_inst (
-	.res, 
-	.res_is_0,
-	.src1,
-	.src2,
-	.sel
-);
-
-`endif
 endmodule

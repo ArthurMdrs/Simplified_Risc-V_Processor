@@ -7,13 +7,6 @@ module next_pc_value #(
     input  logic [WIDTH-1:0] imm 
 );
 
-// always_comb begin
-//     if (branch)
-//         next_pc = curr_pc + {2'b0, imm>>2};
-//     else 
-//         next_pc = curr_pc + 1;
-// end
-
 always_comb begin
     if (branch)
         next_pc = curr_pc + imm;

@@ -16,52 +16,21 @@ module register_bank #(
 // Internal memory
 logic [DWIDTH-1:0] mem [2**AWIDTH];
 
-`ifdef USE_BSC_BLKS
-
-    // Decode address
-    logic [2**AWIDTH-1:0] waddr_1hot;
-    decoder #(.INWIDTH(AWIDTH)) decoder_inst (.out(waddr_1hot), .in(waddr));
-
-    // Drive registers load signal
-    logic [2**AWIDTH-1:0] load;
-    assign load = waddr_1hot & {(2**AWIDTH){wen}};
-
-    // Define write operation
-    always_ff @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            mem <= '{(2**AWIDTH){0}};
-        end else begin
-            foreach (mem[i])
-                if (load[i] && i != '0)
-                    mem[i] <= wdata;
-        end
+// Define write operation
+always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+        mem <= '{(2**AWIDTH){0}};
+    end else begin
+        if (wen && waddr != 0)
+            mem[waddr] <= wdata;
     end
+end
 
-    // Define read operation
-    mux #(.N_INPUTS(2**AWIDTH), .DWIDTH(DWIDTH)) mux_inst1 (.out(rdata1), .in(mem), .sel(raddr1));
-    mux #(.N_INPUTS(2**AWIDTH), .DWIDTH(DWIDTH)) mux_inst2 (.out(rdata2), .in(mem), .sel(raddr2));
-
-
-
-`else // Higher level code below
-
-    // Define write operation
-    always_ff @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            mem <= '{(2**AWIDTH){0}};
-        end else begin
-            if (wen && waddr != 0)
-                mem[waddr] <= wdata;
-        end
-    end
-
-    // Define read operation
-    always_comb begin
-        rdata1 = mem[raddr1];
-        rdata2 = mem[raddr2];
-    end
-
-`endif
+// Define read operation
+always_comb begin
+    rdata1 = mem[raddr1];
+    rdata2 = mem[raddr2];
+end
 
 // Memory address zero must be hardwired to zero
 assign mem[0] = '0;
