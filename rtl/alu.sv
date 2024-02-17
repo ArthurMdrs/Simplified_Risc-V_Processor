@@ -24,7 +24,7 @@ always_comb
         SLL : res = src1   <<  src2[4:0];
         SRL : res = src1   >>  src2[4:0];
         SRA : res = src1_s >>> src2[4:0];
-        default: res = 0;
+        default: res = 'x;
     endcase
 
 assign res_is_0 = (res == 0);

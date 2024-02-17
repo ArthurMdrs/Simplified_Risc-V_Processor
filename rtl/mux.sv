@@ -8,7 +8,7 @@ module mux #(
 );
 
 always_comb begin
-    out = 0;
+    out = 'x;
     for (int i = 0; i < N_INPUTS; i++) begin
         if (sel == i)
             out = in[i];

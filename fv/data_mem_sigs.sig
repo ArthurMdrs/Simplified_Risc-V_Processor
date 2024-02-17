@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <wavelist version="3">
-  <insertion-point-position>12</insertion-point-position>
+  <insertion-point-position>2</insertion-point-position>
   <wave>
     <expr>clk</expr>
+    <label/>
+    <radix/>
+  </wave>
+  <wave>
+    <expr>rst_n</expr>
     <label/>
     <radix/>
   </wave>

@@ -5,8 +5,8 @@ module ctrl_unit import typedefs_pkg::*; #(
     output logic alu_src, 
     output logic mem_wen, 
     output logic reg_wen, 
-    output logic branch, 
-    output logic reg_wdata_src, 
+    output logic [1:0] pc_src, 
+    output logic [1:0] reg_wdata_src, 
 	input  logic [6:0] opcode,
 	input  logic [6:0] funct7,
 	input  logic [2:0] funct3,
@@ -16,7 +16,7 @@ module ctrl_unit import typedefs_pkg::*; #(
 
 // Drive ALU operation selection (typedef in pkg)
 always_comb begin
-    alu_sel = ADD;
+    alu_sel = 'x;
     if (opcode == OP || opcode == OP_IMM)
         case (funct3)
             3'h0: begin
@@ -56,19 +56,26 @@ always_comb begin
             3'h7:
                 alu_sel = SLTU; // bgeu
         endcase
+
+    else if (opcode == STORE || opcode == LOAD)
+        alu_sel = ADD;
+
+    else if (opcode == JALR)
+        alu_sel = ADD;
 end
 
 // Drive ALU source selection
 // alu_src = 0 -> 2nd ALU source is reg bank
 // alu_src = 1 -> 2nd ALU source is immediate operand
 always_comb begin
-    alu_src = 0;
+    alu_src = 'x;
     case (opcode)
         OP    : alu_src = 0;
         OP_IMM: alu_src = 1;
         LOAD  : alu_src = 1;
         STORE : alu_src = 1;
         BRANCH: alu_src = 0;
+        JALR  : alu_src = 1;
     endcase
 end
 
@@ -76,31 +83,48 @@ end
 assign mem_wen = (opcode == STORE);
 
 // Drive register write enable
-assign reg_wen = (opcode inside {OP, OP_IMM, LOAD});
+assign reg_wen = (opcode inside {OP, OP_IMM, LOAD, JAL, JALR});
 
-// Drive branch signal
+// Drive pc_src signal
+// pc_src = 2'b00 -> next PC = PC + 4
+// pc_src = 2'b01 -> next PC = branch/jump target
+// pc_src = 2'b10 -> next PC = return address register
 always_comb begin
-    branch = 0;
+    pc_src = 2'b00;
     if(opcode == BRANCH)
         case (1'b1)
             (funct3==0 &&  ops_equal):  // beq
-                branch = 1;
+                pc_src = 2'b01;
             (funct3==1 && !ops_equal):  // bne
-                branch = 1;
+                pc_src = 2'b01;
             (funct3==4 &&  op1_lt_op2): // blt
-                branch = 1;
+                pc_src = 2'b01;
             (funct3==5 && !op1_lt_op2): // bge
-                branch = 1;
+                pc_src = 2'b01;
             (funct3==6 &&  op1_lt_op2): // bltu
-                branch = 1;
+                pc_src = 2'b01;
             (funct3==7 && !op1_lt_op2): // bgeu
-                branch = 1;
+                pc_src = 2'b01;
         endcase
+    else if (opcode == JAL)
+        pc_src = 2'b01;
+    else if (opcode == JALR)
+        pc_src = 2'b10;
 end
 
 // Drive result source
-// reg_wdata_src = 0 -> reg bank wdata is ALU result
-// reg_wdata_src = 1 -> reg bank wdata is data mem rdata
-assign reg_wdata_src = (opcode == LOAD);
+// reg_wdata_src = 2'b00 -> reg bank wdata is ALU result
+// reg_wdata_src = 2'b01 -> reg bank wdata is data mem rdata
+// reg_wdata_src = 2'b10 -> reg bank wdata is PC + 4
+always_comb begin
+    reg_wdata_src = 'x;
+    case (opcode)
+        OP    : reg_wdata_src = 2'b00;
+        OP_IMM: reg_wdata_src = 2'b00;
+        LOAD  : reg_wdata_src = 2'b01;
+        JAL   : reg_wdata_src = 2'b10;
+        JALR  : reg_wdata_src = 2'b10;
+    endcase
+end
     
 endmodule

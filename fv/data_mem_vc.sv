@@ -1,5 +1,5 @@
 module data_mem_vc #(
-    int AWIDTH = 3,
+    int AWIDTH = 8,
     int DWIDTH = 8,
     localparam int MWIDTH = DWIDTH/8
 ) (
@@ -80,7 +80,7 @@ endgenerate
 
 
 // Assumes
-ASM_NO_MISALIGNMENT: assume property (addr % 4 == 0);
+ASM_NO_MISALIGNMENT: assume property (wen |-> addr % 4 == 0);
 ASM_VALID_MASK: assume property (VALID_MASK(MWIDTH));
 ASM_IF_WEN_THEN_MASK_NOT_0: assume property (IF_WEN_THEN_MASK_NOT_0);
 
@@ -116,6 +116,7 @@ endproperty
 AST_DATA_INTEGRITY1: assert property (DATA_INTEGRITY(addr, rdata));
 
 ASM_ADDR_NDC_CONST: assume property (addr_ndc == $past(addr_ndc));
+ASM_NO_OUT_OF_BOUND: assume property (addr <= 2**AWIDTH-4);
 
 COV_MASK_EQ_0_SANITY: cover property (
     (wdata_mask == '0) ##1 (rdata == xptd_data)

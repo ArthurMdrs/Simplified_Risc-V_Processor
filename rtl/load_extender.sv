@@ -11,9 +11,10 @@ always_comb begin
     case (instr.I.funct3)
         0: load_ext = {{(DWIDTH- 8){load_word[ 7]}}, load_word[ 7:0]}; // lb
         1: load_ext = {{(DWIDTH-16){load_word[15]}}, load_word[15:0]}; // lh
+        2: load_ext = load_word;                                       // lw
         4: load_ext = {{(DWIDTH- 8){        1'b0 }}, load_word[ 7:0]}; // lbu
         5: load_ext = {{(DWIDTH-16){        1'b0 }}, load_word[15:0]}; // lhu
-        default: load_ext = load_word;                                 // lw
+        default: load_ext = 'x;
     endcase
 end
 

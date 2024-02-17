@@ -18,6 +18,9 @@ end
 // NOTE THERE IS NO WRITE OPERATION
 // SO THIS IS A ROM!!
 
-// Suggestion: look up an open-source ROM memory IP to replace this
+// This is to be used as as instruction memory
+// in a single-cycle processor.
+// In pratice, there should be only 1 memory for
+// both data and instructions.
     
 endmodule
