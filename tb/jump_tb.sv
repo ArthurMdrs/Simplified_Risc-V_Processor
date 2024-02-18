@@ -17,7 +17,6 @@ import typedefs_pkg::*;
 
 localparam int XLEN = 32;
 localparam int AWIDTH = 5;
-localparam int DWIDTH = 8;
 // localparam int INSTR_MEM_SIZE = 2**8 * 4;           // holds 2**8 instructions
 localparam int INSTR_MEM_SIZE = 1024;           // holds 2**8 instructions
 localparam int IMEM_AWIDTH = $clog2(INSTR_MEM_SIZE);
@@ -36,8 +35,6 @@ logic [XLEN-1:0] dmem_rdata;
 
 // Internal wires
 logic [XLEN-1:0] pc_i, pc_o;
-// logic [XLEN-1:0] pc_p_4;
-// logic [XLEN-1:0] pc_p_imm;
 instr_t                 instr;
 aluop_sel_t             alu_sel;
 logic                   alu_src;
@@ -55,18 +52,6 @@ logic   [     3:0]      mem_wdata_mask; // Each bit set = valid byte in wdata
 logic   [     3:0]      mem_rdata_mask; // Unused!
 
 //==============   Module instantiations - BEGIN   ==============//
-
-// assign pc_p_4    = pc_o + 4;
-// assign pc_p_imm  = pc_o + imm;
-
-// mux #(
-//     .N_INPUTS(3),
-//     .DWIDTH(XLEN)
-// ) mux_pc_i (
-//     .out(pc_i),
-//     .in({ pc_p_4,  pc_p_imm,  alu_res }),
-//     .sel(pc_src)
-// );
 
 next_pc_value #(
     .WIDTH(XLEN)
@@ -195,7 +180,7 @@ load_extender #(
 //=================   Simulation - BEGIN   =================//
 
 int n_mismatches;
-bit verbose = 1;
+bit verbose = 0;
 logic [XLEN-1:0] expected;
 
 logic [XLEN-1:0] regs_clone [2**AWIDTH];
@@ -207,7 +192,7 @@ logic [XLEN-1:0] xptd_dmem [DATA_MEM_SIZE/4];
 
 string progs [] = '{"BRANCH", "JAL", "OP", "OP-IMM", "ST_LD", "WR_ALL_MEM"};
 
-string prog_name = "WR_ALL_MEM";
+string prog_name = progs[5];
 string prog_file = {"programs/", prog_name, "_prog.txt"};
 string dmem_file = {"programs/", prog_name, "_data.txt"};
 
@@ -225,6 +210,8 @@ initial begin
     $timeformat(-9, 0, "ns", 5); // e.g.: "900ns"
 
     $display("#==========================================================#");
+
+    $display("%t: Running program %s.", $time, prog_name);
     
     reset ();
 
@@ -247,7 +234,8 @@ initial begin
         end
     checkit("dmem", xptd_dmem, dmem_clone);
 
-    print_regs();
+    if (verbose)
+        print_regs();
 
     $display("%t: Simulation end. Number of mismatches: %0d.", $time, n_mismatches);
 

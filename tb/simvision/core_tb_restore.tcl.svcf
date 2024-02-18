@@ -1,0 +1,200 @@
+# SimVision Command Script (Sat Feb 17 20:29:22 -03 2024)
+#
+# Version 23.09.s003
+#
+# You can restore this configuration with:
+#
+#      xrun -64bit -sv +define+SIM ../rtl/pkg/typedefs_pkg.sv ../rtl/alu.sv ../rtl/core.sv ../rtl/ctrl_unit.sv ../rtl/data_mem.sv ../rtl/imm_extender.sv ../rtl/load_extender.sv ../rtl/mux.sv ../rtl/next_pc_value.sv ../rtl/register.sv ../rtl/register_bank.sv ../rtl/rom_mem.sv ../fv/data_mem_vc.sv ../fv/mux_vc.sv ../fv/register_bank_vc.sv ./core_tb.sv +define+SVA_ON=1 -top core_tb -timescale 1ns/1ps -access +rwc -svseed 2 -input /home/pedro.medeiros/Simplified_Risc-V_Processor/tb/simvision/core_tb_restore.tcl
+#
+
+
+#
+# Preferences
+#
+preferences set toolbar-Standard-WatchWindow {
+  usual
+  shown 0
+}
+preferences set waveform-print-variables all
+preferences set plugin-enable-svdatabrowser-new 1
+preferences set toolbar-Windows-WatchWindow {
+  usual
+  shown 0
+}
+preferences set waveform-print-paper {A4 (210mm x 297mm)}
+preferences set plugin-enable-groupscope 0
+preferences set plugin-enable-interleaveandcompare 0
+preferences set plugin-enable-waveformfrequencyplot 0
+preferences set toolbar-SimControl-WatchWindow {
+  usual
+  shown 0
+}
+preferences set waveform-print-colors {Color on white}
+preferences set toolbar-TimeSearch-WatchWindow {
+  usual
+  shown 0
+}
+
+#
+# Simulator
+#
+database require simulator -hints {
+	simulator "xrun -64bit -sv +define+SIM ../rtl/pkg/typedefs_pkg.sv ../rtl/alu.sv ../rtl/core.sv ../rtl/ctrl_unit.sv ../rtl/data_mem.sv ../rtl/imm_extender.sv ../rtl/load_extender.sv ../rtl/mux.sv ../rtl/next_pc_value.sv ../rtl/register.sv ../rtl/register_bank.sv ../rtl/rom_mem.sv ../fv/data_mem_vc.sv ../fv/mux_vc.sv ../fv/register_bank_vc.sv ./core_tb.sv +define+SVA_ON=1 -top core_tb -timescale 1ns/1ps -access +rwc -svseed 2 -gui -input core_tb_restore.tcl"
+}
+
+#
+# Mnemonic Maps
+#
+mmap new  -reuse -name {Boolean as Logic} -radix %b -contents {{%c=FALSE -edgepriority 1 -shape low}
+{%c=TRUE -edgepriority 1 -shape high}}
+mmap new  -reuse -name {Example Map} -radix %x -contents {{%b=11???? -bgcolor orange -label REG:%x -linecolor yellow -shape bus}
+{%x=1F -bgcolor red -label ERROR -linecolor white -shape EVENT}
+{%x=2C -bgcolor red -label ERROR -linecolor white -shape EVENT}
+{%x=* -label %x -linecolor gray -shape bus}}
+
+#
+# Time Ranges
+#
+timerange new -name {0 : 20ns} -start 0 -end 20000ps
+
+#
+# Design Browser windows
+#
+if {[catch {window new WatchList -name "Design Browser 1" -geometry 730x500+49+27}] != ""} {
+    window geometry "Design Browser 1" 730x500+49+27
+}
+window target "Design Browser 1" on
+browser using {Design Browser 1}
+browser set \
+    -signalsort name
+browser timecontrol set -lock 0
+
+#
+# Waveform windows
+#
+if {[catch {window new WaveWindow -name "Waveform 2" -geometry 1871x958+49+27}] != ""} {
+    window geometry "Waveform 2" 1871x958+49+27
+}
+window target "Waveform 2" on
+waveform using {Waveform 2}
+waveform sidebar visibility partial
+waveform set \
+    -primarycursor TimeA \
+    -signalnames name \
+    -signalwidth 175 \
+    -units ps \
+    -valuewidth 75
+waveform baseline set -time 0
+
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.clk}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.rst_n}]}
+	} ]]
+set id [waveform add -cdivider divider]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.core_inst.instr}]}
+	} ]]
+waveform hierarchy collapse $id
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.core_inst.pc_i[9:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.core_inst.pc_o[9:0]}]}
+	} ]]
+set id [waveform add -cdivider divider]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.core_inst.alu_inst.sel[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.core_inst.alu_inst.src1[31:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.core_inst.alu_inst.src2[31:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.core_inst.alu_inst.res[31:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.core_inst.alu_inst.res_is_0}]}
+	} ]]
+set id [waveform add -cdivider divider]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.regs_clone[0:31]}]}
+	} ]]
+set id [waveform add -cdivider divider]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.core_inst.ctrl_unit_inst.funct3[2:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.core_inst.ctrl_unit_inst.funct7[6:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.core_inst.ctrl_unit_inst.opcode[6:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.core_inst.ctrl_unit_inst.ops_equal}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.core_inst.ctrl_unit_inst.op1_lt_op2}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.core_inst.ctrl_unit_inst.alu_sel[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.core_inst.ctrl_unit_inst.alu_src1}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.core_inst.ctrl_unit_inst.alu_src2}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.core_inst.ctrl_unit_inst.pc_src[1:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.core_inst.ctrl_unit_inst.mem_wen}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.core_inst.ctrl_unit_inst.reg_wdata_src[1:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.core_inst.ctrl_unit_inst.reg_wen}]}
+	} ]]
+set id [waveform add -cdivider divider]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.data_mem_inst.addr[9:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.data_mem_inst.wdata[31:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.data_mem_inst.wdata_mask[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.data_mem_inst.rdata[31:0]}]}
+	} ]]
+set id [waveform add -cdivider divider]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.dmem_clone[0:255]}]}
+	} ]]
+set id [waveform add -cdivider divider]
+set id [waveform add -signals [subst  {
+	{simulator::[format {core_tb.core_inst.imm[31:0]}]}
+	} ]]
+
+waveform xview limits 0 20000ps
+
+#
+# Waveform Window Links
+#
+
+#
+# Console windows
+#
+console set -windowname Console
+window geometry Console 730x250+261+564
+
+#
+# Layout selection
+#
+

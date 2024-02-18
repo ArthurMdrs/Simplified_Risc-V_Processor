@@ -67,6 +67,7 @@ package typedefs_pkg;
 
     // opcodes
     localparam logic [6:0] OP     = 7'b011_0011, OP_IMM = 7'b001_0011, LOAD = 7'b000_0011, STORE = 7'b010_0011,
-                           BRANCH = 7'b110_0011, JAL    = 7'b110_1111, JALR = 7'b110_0111;
+                           BRANCH = 7'b110_0011, JAL    = 7'b110_1111, JALR = 7'b110_0111, LUI   = 7'b011_0111,
+                           AUIPC  = 7'b001_0111;
 
 endpackage 

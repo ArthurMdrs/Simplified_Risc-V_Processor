@@ -14,6 +14,8 @@ always_comb begin
         STORE  : imm_ext = {{(DWIDTH-12){instr.S[31]}}, instr.S.imm_up, instr.S.imm_dn};
         BRANCH : imm_ext = {{(DWIDTH-11){instr.B[31]}}, instr.B.imm_12, instr.B.imm_11, instr.B.imm_10_5, instr.B.imm_4_1, 1'b0};
         JAL    : imm_ext = {{(DWIDTH-11){instr.J[31]}}, instr.J.imm_20, instr.J.imm_19_12, instr.J.imm_11, instr.J.imm_10_1, 1'b0};
+        LUI    : imm_ext = {instr.U.imm, {(DWIDTH-20){1'b0}}};
+        AUIPC  : imm_ext = {instr.U.imm, {(DWIDTH-20){1'b0}}};
         default: imm_ext = 'x;
     endcase
 end

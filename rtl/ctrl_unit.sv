@@ -2,7 +2,8 @@ module ctrl_unit import typedefs_pkg::*; #(
     int WIDTH = 8
 ) (
 	output aluop_sel_t alu_sel,
-    output logic alu_src, 
+    output logic alu_src1, 
+    output logic alu_src2, 
     output logic mem_wen, 
     output logic reg_wen, 
     output logic [1:0] pc_src, 
@@ -62,20 +63,37 @@ always_comb begin
 
     else if (opcode == JALR)
         alu_sel = ADD;
+
+    else if (opcode == AUIPC)
+        alu_sel = ADD;
 end
 
 // Drive ALU source selection
-// alu_src = 0 -> 2nd ALU source is reg bank
-// alu_src = 1 -> 2nd ALU source is immediate operand
+// alu_src1 = 0 -> 1st ALU source is reg bank
+// alu_src1 = 1 -> 1st ALU source is PC
+// alu_src2 = 0 -> 2nd ALU source is reg bank
+// alu_src2 = 1 -> 2nd ALU source is immediate operand
 always_comb begin
-    alu_src = 'x;
+    alu_src2 = 'x;
     case (opcode)
-        OP    : alu_src = 0;
-        OP_IMM: alu_src = 1;
-        LOAD  : alu_src = 1;
-        STORE : alu_src = 1;
-        BRANCH: alu_src = 0;
-        JALR  : alu_src = 1;
+        OP    : alu_src2 = 0;
+        OP_IMM: alu_src2 = 1;
+        LOAD  : alu_src2 = 1;
+        STORE : alu_src2 = 1;
+        BRANCH: alu_src2 = 0;
+        JALR  : alu_src2 = 1;
+        AUIPC : alu_src2 = 1;
+    endcase
+
+    alu_src1 = 'x;
+    case (opcode)
+        OP    : alu_src1 = 0;
+        OP_IMM: alu_src1 = 0;
+        LOAD  : alu_src1 = 0;
+        STORE : alu_src1 = 0;
+        BRANCH: alu_src1 = 0;
+        JALR  : alu_src1 = 0;
+        AUIPC : alu_src1 = 1;
     endcase
 end
 
@@ -83,7 +101,7 @@ end
 assign mem_wen = (opcode == STORE);
 
 // Drive register write enable
-assign reg_wen = (opcode inside {OP, OP_IMM, LOAD, JAL, JALR});
+assign reg_wen = (opcode inside {OP, OP_IMM, LOAD, JAL, JALR, LUI, AUIPC});
 
 // Drive pc_src signal
 // pc_src = 2'b00 -> next PC = PC + 4
@@ -116,6 +134,7 @@ end
 // reg_wdata_src = 2'b00 -> reg bank wdata is ALU result
 // reg_wdata_src = 2'b01 -> reg bank wdata is data mem rdata
 // reg_wdata_src = 2'b10 -> reg bank wdata is PC + 4
+// reg_wdata_src = 2'b11 -> reg bank wdata is immediate (LUI)
 always_comb begin
     reg_wdata_src = 'x;
     case (opcode)
@@ -124,6 +143,8 @@ always_comb begin
         LOAD  : reg_wdata_src = 2'b01;
         JAL   : reg_wdata_src = 2'b10;
         JALR  : reg_wdata_src = 2'b10;
+        LUI   : reg_wdata_src = 2'b11;
+        AUIPC : reg_wdata_src = 2'b00;
     endcase
 end
     

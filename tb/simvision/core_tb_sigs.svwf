@@ -1,0 +1,115 @@
+
+#
+# Mnemonic Maps
+#
+mmap new  -reuse -name {Boolean as Logic} -radix %b -contents {{%c=FALSE -edgepriority 1 -shape low}
+{%c=TRUE -edgepriority 1 -shape high}}
+mmap new  -reuse -name {Example Map} -radix %x -contents {{%b=11???? -bgcolor orange -label REG:%x -linecolor yellow -shape bus}
+{%x=1F -bgcolor red -label ERROR -linecolor white -shape EVENT}
+{%x=2C -bgcolor red -label ERROR -linecolor white -shape EVENT}
+{%x=* -label %x -linecolor gray -shape bus}}
+
+array unset createdGroup
+array set createdGroup {}
+set id [waveform add -signals [subst  {
+	{[format {core_tb.clk}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.rst_n}]}
+	} ]]
+set id [waveform add -cdivider divider]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.core_inst.instr}]}
+	} ]]
+waveform hierarchy expand $id
+set id2 [lindex [waveform hierarchy content $id] 5]
+waveform hierarchy collapse $id2
+waveform hierarchy collapse $id
+set id [waveform add -signals [subst  {
+	{[format {core_tb.core_inst.pc_i[9:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.core_inst.pc_o[9:0]}]}
+	} ]]
+set id [waveform add -cdivider divider]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.core_inst.alu_inst.sel[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.core_inst.alu_inst.src1[31:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.core_inst.alu_inst.src2[31:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.core_inst.alu_inst.res[31:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.core_inst.alu_inst.res_is_0}]}
+	} ]]
+set id [waveform add -cdivider divider]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.regs_clone[0:31]}]}
+	} ]]
+waveform hierarchy collapse $id
+set id [waveform add -cdivider divider]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.core_inst.ctrl_unit_inst.funct3[2:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.core_inst.ctrl_unit_inst.funct7[6:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.core_inst.ctrl_unit_inst.opcode[6:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.core_inst.ctrl_unit_inst.ops_equal}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.core_inst.ctrl_unit_inst.op1_lt_op2}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.core_inst.ctrl_unit_inst.alu_sel[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.core_inst.ctrl_unit_inst.alu_src1}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.core_inst.ctrl_unit_inst.alu_src2}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.core_inst.ctrl_unit_inst.pc_src[1:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.core_inst.ctrl_unit_inst.mem_wen}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.core_inst.ctrl_unit_inst.reg_wdata_src[1:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.core_inst.ctrl_unit_inst.reg_wen}]}
+	} ]]
+set id [waveform add -cdivider divider]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.data_mem_inst.addr[9:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.data_mem_inst.wdata[31:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.data_mem_inst.wdata_mask[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.data_mem_inst.rdata[31:0]}]}
+	} ]]
+set id [waveform add -cdivider divider]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.dmem_clone[0:255]}]}
+	} ]]
+waveform hierarchy collapse $id
+set id [waveform add -cdivider divider]
+set id [waveform add -signals [subst  {
+	{[format {core_tb.core_inst.imm[31:0]}]}
+	} ]]
+
+waveform xview limits 0ps 20000ps
