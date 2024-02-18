@@ -1,24 +1,23 @@
-module core #(
-    int INSTR_MEM_SIZE = 2**8,
-    localparam int IMEM_AWIDTH = $clog2(INSTR_MEM_SIZE)
-) (
+module core (
     input  logic clk,
     input  logic rst_n,
 
-    // Interface with memory
+    // Interface with data memory
     input  logic [31:0] dmem_rdata,
     output logic [31:0] dmem_wdata,
     output logic [31:0] dmem_addr,
     output logic        dmem_wen,
-    output logic  [3:0] dmem_wr_mask
+    output logic  [3:0] dmem_wr_mask,
+
+    // Interface with instruction memory
+    input  logic [31:0] imem_rdata,
+    output logic [31:0] imem_addr
 );
 
 import typedefs_pkg::*;
 
-localparam int XLEN = 32;
-
 // Program counter
-logic [31:0] pc_i, pc_o;
+logic [31:0] pc_next, pc;
 // Instruction
 instr_t instr;
 
@@ -37,6 +36,7 @@ logic [31:0] rdata2;
 logic [31:0] alu_op1;
 logic [31:0] alu_op2;
 logic [31:0] imm;
+logic [31:0] load_word;
 logic [31:0] load_ext;
 logic [31:0] reg_wdata;
 logic [31:0] alu_res;
@@ -47,8 +47,8 @@ logic        res_is_0;
 next_pc_value #(
     .WIDTH(32)
 ) next_pc_val_inst (
-    .next_pc(pc_i),
-    .curr_pc(pc_o), 
+    .next_pc(pc_next),
+    .curr_pc(pc), 
     .alu_res,
     .pc_src,
     .imm
@@ -56,19 +56,11 @@ next_pc_value #(
 
 register #(
     .WIDTH(32)
-) pc (
-	.reg_o(pc_o),
-	.reg_i(pc_i),
+) pc_reg (
+	.reg_o(pc),
+	.reg_i(pc_next),
 	.clk, 
 	.rst_n
-);
-
-rom_mem #(
-    .AWIDTH(IMEM_AWIDTH),
-    .DWIDTH(32)
-) instr_mem (
-    .rdata(instr),
-    .addr(pc_o)
 );
 
 ctrl_unit ctrl_unit_inst (
@@ -91,7 +83,7 @@ mux #(
     .DWIDTH(32)
 ) mux_reg_wdata (
     .out(reg_wdata),
-    .in({ alu_res,  load_ext,  pc_o+4,  imm }),
+    .in({ alu_res,  load_ext,  pc+4,  imm }),
     .sel(reg_wdata_src)
 );
 
@@ -125,7 +117,7 @@ mux #(
     .DWIDTH(32)
 ) mux_alu_src1 (
     .out(alu_op1),
-    .in({ rdata1,  pc_o }),
+    .in({ rdata1,  pc }),
     .sel(alu_src1)
 );
 
@@ -150,16 +142,18 @@ load_extender #(
 ) load_ext_inst (
     .load_ext,
     .instr,
-    .load_word(dmem_rdata)
+    .load_word
 );
 
 //==============   Module instantiations - END   ==============//
 
-// Drive signals from data memory interface
+// Signals from data memory interface
 
-assign dmem_wdata   = rdata2;
-assign dmem_addr    = alu_res;
-assign dmem_wen     = mem_wen;
+assign load_word  = dmem_rdata;
+
+assign dmem_wdata = rdata2;
+assign dmem_addr  = alu_res;
+assign dmem_wen   = mem_wen;
 
 always_comb begin // dmem_wr_mask
     case (instr.S.funct3)
@@ -169,5 +163,13 @@ always_comb begin // dmem_wr_mask
         default: dmem_wr_mask = '0;
     endcase
 end
+
+
+
+// Signals from instruction memory interface
+
+assign instr = imem_rdata;
+
+assign imem_addr = pc;
 
 endmodule

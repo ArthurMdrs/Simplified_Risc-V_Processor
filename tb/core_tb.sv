@@ -28,18 +28,22 @@ logic [31:0] dmem_addr;
 logic        dmem_wen;
 logic  [3:0] dmem_wr_mask;
 
+// Instruction memory interface
+logic [31:0] imem_rdata;
+logic [31:0] imem_addr;
+
 //==============   Module instantiations - BEGIN   ==============//
 
-core #(
-    .INSTR_MEM_SIZE(INSTR_MEM_SIZE)
-) core_inst (
+core core_inst (
     .clk,
     .rst_n,
     .dmem_rdata,
     .dmem_wdata,
     .dmem_addr,
     .dmem_wen,
-    .dmem_wr_mask
+    .dmem_wr_mask,
+    .imem_rdata,
+    .imem_addr
 );
 
 data_mem #(
@@ -53,6 +57,14 @@ data_mem #(
     .clk,
     .rst_n,
     .wdata_mask(dmem_wr_mask)
+);
+
+rom_mem #(
+    .AWIDTH(IMEM_AWIDTH),
+    .DWIDTH(32)
+) instr_mem (
+    .rdata(imem_rdata),
+    .addr(imem_addr)
 );
 
 //==============   Module instantiations - END   ==============//
@@ -74,7 +86,8 @@ logic [31:0] xptd_dmem [DATA_MEM_SIZE/4];
 
 string progs [] = '{"BRANCH", "JAL", "OP", "OP-IMM", "ST_LD", "WR_ALL_MEM", "LUI_AUIPC"};
 
-string prog_name = progs[0];
+// string prog_name = progs[0];
+string prog_name = "WR_ALL_MEM";
 string prog_file = {"programs/", prog_name, "_prog.txt"};
 string dmem_file = {"programs/", prog_name, "_data.txt"};
 
@@ -138,12 +151,12 @@ endtask
 task load_instr_mem;
     logic [31:0] mem [INSTR_MEM_SIZE];
     $readmemh(prog_file, mem);
-    foreach(mem[i]) core_inst.instr_mem.mem[i*4+:4] = mem[i];
+    foreach(mem[i]) instr_mem.mem[i*4+:4] = mem[i];
 endtask
 
 task print_instr_mem;
-    for(int i = 0; core_inst.instr_mem.mem[i*4+:4] != '0; i++) begin
-        $display("%t: Read 0x%h from memory address %0d.", $time, core_inst.instr_mem.mem[i*4+:4], i);
+    for(int i = 0; instr_mem.mem[i*4+:4] != '0; i++) begin
+        $display("%t: Read 0x%h from memory address %0d.", $time, instr_mem.mem[i*4+:4], i);
     end
 endtask
 

@@ -7,6 +7,7 @@ TB = ./core_tb.sv
 TOP = -top core_tb
 
 SEED = -svseed 2
+INPUT = -input simvision/core_tb_restore.tcl
 
 run: sim
 
@@ -16,7 +17,7 @@ sim:
 
 gui:
 	xrun -64bit -sv +define+SIM $(RTL) $(FV) $(TB) $(SVA) $(TOP) \
-		 -timescale 1ns/1ps -access +rwc $(SEED) -gui
+		 -timescale 1ns/1ps -access +rwc $(SEED) -gui $(INPUT)
 
 clean:
 	rm -rf xcelium.d xrun* .simvision .symbol* waves*
